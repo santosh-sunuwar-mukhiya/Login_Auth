@@ -10,6 +10,7 @@ class UserBase(BaseModel): # type: ignore
 class UserCreate(UserBase):
     password: str
     address: str
+    username: str
 
 class UserRead(UserBase):
     id: UUID
