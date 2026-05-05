@@ -1,6 +1,8 @@
 from sqlmodel import SQLModel # type: ignore
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker  # type: ignore
-from ..config import db_settings
+from ..config import DataBaseSettings
+
+db_settings = DataBaseSettings()  # type: ignore
 
 engine = create_async_engine( # type: ignore
     url=db_settings.DATABASE_URL,
