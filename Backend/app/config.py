@@ -1,11 +1,11 @@
 from typing import Optional
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, ConfigDict
 from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore
 
 _base_config = SettingsConfigDict(
     env_file=".env",  # Correct parameter name for pydantic v2
     env_ignore_empty=True,
-    extras="ignore"
+    extra="ignore"  # Ignore extra fields from .env
 )
 
 
@@ -48,7 +48,29 @@ class SecuritySettings(BaseSettings):
         return v
 
 
+class MailSettings(BaseSettings):
+    """Email/SMTP configuration settings."""
+    
+    MAIL_USERNAME: str = Field(..., description="SMTP username")
+    MAIL_PASSWORD: str = Field(..., description="SMTP password")
+    MAIL_FROM: str = Field(..., description="Sender email address")
+    MAIL_FROM_NAME: str = Field(default="No Reply", description="Sender name")
+    MAIL_SERVER: str = Field(default="smtp.gmail.com", description="SMTP server address")
+    MAIL_PORT: int = Field(default=587, description="SMTP server port")
+
+    model_config = _base_config
+    
+    @field_validator("MAIL_PORT")
+    @classmethod
+    def validate_mail_port(cls, v: int) -> int:
+        """Validate mail port is in valid range."""
+        if not (1 <= v <= 65535):
+            raise ValueError("Port must be between 1 and 65535")
+        return v
+
+
 # Initialize settings - these will be loaded from .env file
 db_settings = DataBaseSettings()
 security_settings = SecuritySettings()
+mail_settings = MailSettings()
 
