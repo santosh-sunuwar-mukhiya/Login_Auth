@@ -1,28 +1,43 @@
-from .databases.session import create_db_tables # type: ignore
-from fastapi import FastAPI # type: ignore
-from fastapi.responses import HTMLResponse # type: ignore
-from scalar_fastapi import get_scalar_api_reference # type: ignore
 from contextlib import asynccontextmanager
-from .api.router import master_router
+import logging
+
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from scalar_fastapi import get_scalar_api_reference
+
+from app.api.router import master_router
+from app.core.config import settings
+from app.core.logging import configure_logging
+from app.db.session import create_db_tables
+
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Server Started...")
+    configure_logging()
+    logger.info("Starting %s", settings.PROJECT_NAME)
     await create_db_tables()
     yield
-    print("Server Stopped...")
+    logger.info("Stopping %s", settings.PROJECT_NAME)
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version="1.0.0",
+    lifespan=lifespan,
+)
 
 app.include_router(master_router)
 
-# Sample route
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "FastAPI authentication and blog API is running."}
 
-# Scalar Docs Endpoint
+
+@app.get("/health", tags=["health"])
+async def health_check():
+    return {"status": "ok"}
+
 @app.get("/scalar", include_in_schema=False)
 async def scalar_docs() -> HTMLResponse:
     return get_scalar_api_reference(
